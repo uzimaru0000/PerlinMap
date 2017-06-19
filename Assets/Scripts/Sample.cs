@@ -1,0 +1,23 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Sample : MonoBehaviour {
+
+	public float scale;
+	public Vector2 offs;
+
+	// Use this for initialization
+	void Start () {
+		
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+	void OnDrawGizmos() {
+		Perlin.CreateMap(32, 32, offs, 1);
+	}
+}
