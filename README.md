@@ -1,4 +1,4 @@
 # PerlinMap
 
 ## Discription
-Create map with perlin noise.
+Create map using perlin noise.
