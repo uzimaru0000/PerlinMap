@@ -64,6 +64,7 @@ public class Sample : MonoBehaviour {
 		if (filePath.Length > 0) {
 			File.WriteAllBytes(filePath, data);
 		}
+		
 	}
 
 	[ContextMenu("PaintTexture")]
@@ -77,18 +78,6 @@ public class Sample : MonoBehaviour {
 		}).ToArray();
 		terrainData.splatPrototypes = splatData;
 
-		// var alphaTexture = terrainData.GetHeights(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight)
-		// 	.Cast<float>()
-		// 	.Select(x => {
-		// 		var arr = new float[splatData.Length];
-		// 		var n = 0;
-		// 		for (n = 0; n < splatData.Length; n++) {
-		// 			if (textureDatas[n].max > x) break;
-		// 		}
-		// 		arr[n] = 1.0f;
-		// 		return arr;
-		// 	}).ToArray();
-
 		var alphaTexture = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, textureDatas.Length];
 		var data = terrainData.GetHeights(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
 		for (var i = 0; i < terrainData.alphamapWidth; i++) {
@@ -98,11 +87,20 @@ public class Sample : MonoBehaviour {
 					if (textureDatas[n].max > data[i, j]) break;
 				}
 				alphaTexture[i, j, n] = 1.0f;
+				
+				var angle = terrainData.GetSteepness(i * 1.0f / (terrainData.alphamapWidth - 1), j * 1.0f / (terrainData.alphamapHeight - 1)) * Mathf.Deg2Rad;
+				var func = n > 0 ? CreateGradation(textureDatas[n-1].max, textureDatas[n].max, 0.5f)
+								 : CreateGradation(0, textureDatas[n].max, 0.5f);
+
+				if (n < textureDatas.Length-1) {
+					var rate = Mathf.Sin(angle) <= 0 ? func(data[i, j]) : func(data[i, j]) / Mathf.Sin(angle);
+					alphaTexture[i, j, n] = 1.0f - rate;
+					alphaTexture[i, j, n+1] = rate;
+				}
 			}
 		}
 
 		terrainData.SetAlphamaps(0, 0, alphaTexture);
-		// terrainData.SetAlphamaps(0, 0, ConvertArray(alphaTexture, terrainData.alphamapWidth, terrainData.alphamapHeight));
 		
 	}
 
@@ -152,6 +150,15 @@ public class Sample : MonoBehaviour {
 		}
 
 		return newArr;
+	}
+
+	System.Func<float, float> CreateGradation(float n0, float n1, float a) {
+		var r = (n1 - n0) * a;
+		return f => {
+			var c = n1 - r;
+			var result = f / c - r / c;
+			return result < 0 ? 0 : result;
+		};
 	}
 }
 
